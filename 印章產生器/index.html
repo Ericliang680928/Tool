@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <title>公司內部印章產生器</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%27http://www.w3.org/2000/svg%27 viewBox=%270 0 32 32%27%3E%3Crect x=%274%27 y=%274%27 width=%2724%27 height=%2724%27 rx=%274%27 fill=%27none%27 stroke=%27%23d42424%27 stroke-width=%273%27/%3E%3Ctext x=%2716%27 y=%2722%27 font-size=%2716%27 text-anchor=%27middle%27 fill=%27%23d42424%27%3E印%3C/text%3E%3C/svg%3E">
 <style>
 :root{--bg:#eef2f8;--card:#fff;--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--brand:#2563eb;--nav:#0b1f3a;--soft:#f3f6fb}
 *{box-sizing:border-box}
@@ -11,12 +12,21 @@ body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft Jheng
 header{background:var(--nav);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
 header h1{font-size:18px;margin:0;font-weight:700}
 header small{opacity:.7}
+@media(max-width:640px){header{flex-direction:column;align-items:flex-start;gap:2px;padding:10px 16px}header small{font-size:12px}}
 .grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:20px 24px;align-items:start}
 @media(max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media(max-width:640px){.grid{grid-template-columns:1fr;padding:16px}.prev{order:-1}}
 .card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
-.prev{position:sticky;top:16px}
-@media(max-width:1100px){.prev{position:static}}
+.prevcol{position:sticky;top:16px;display:flex;flex-direction:column;gap:16px;max-height:calc(100vh - 32px);overflow-y:auto}
+@media(max-width:1100px){.prevcol{position:static;max-height:none;overflow:visible}}
+@media(max-width:640px){
+  .grid{grid-template-columns:1fr;padding:16px}
+  .prevcol{display:contents}
+  .prev-cv{order:-1;position:sticky;top:0;z-index:5;padding:8px;border-radius:0 0 14px 14px;box-shadow:0 4px 12px rgba(15,23,42,.14)}
+  .prev-cv h2{display:none}
+  .prev-cv #cv{max-height:34vh;max-width:100%;width:auto;margin:0 auto}
+  .prev-opt{order:99}
+}
+.hint{font-size:12px;color:var(--mute);margin:4px 0}
 .card h2{font-size:16px;margin:0 0 14px;color:#1e3a8a}
 .f{font-size:12px;color:var(--mute);margin:10px 0 4px}
 input[type=text],textarea{width:100%;border:1px solid #cfd6e4;border-radius:8px;padding:8px 10px;font:inherit;background:#fff}
@@ -79,42 +89,53 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
 <body>
 <header>
   <h1>公司內部印章產生器</h1>
-  <small>調整左邊的欄位，右邊即時預覽，最後按「下載透明底 PNG」</small>
+  <small>調整欄位，預覽會即時更新，最後按「下載透明底 PNG」</small>
 </header>
 
 <main class="grid" id="grid">
   <section class="card" id="col1"></section>
   <section class="card co-only" id="col2"></section>
   <section class="card co-only" id="col3"></section>
-  <section class="card prev">
+  <div class="prevcol">
+  <section class="card prev-cv">
     <h2>即時預覽</h2>
-    <div class="checker"><canvas id="cv" width="1200" height="1200"></canvas></div>
-    <div class="f" style="margin-top:14px">印章字型</div>
-    <div class="opt">
+    <div class="checker"><canvas id="cv" width="1200" height="1200" role="img" aria-label="印章即時預覽"></canvas></div>
+  </section>
+  <section class="card prev-opt">
+    <div class="f">印章字型</div>
+    <div class="opt" role="radiogroup" aria-label="印章字型">
       <label><input type="radio" name="font" value="kai" data-k="font"> <b>標楷體</b> (英文 Arial)</label>
       <label><input type="radio" name="font" value="hei" data-k="font"> <b>正黑體</b> (英文 Arial)</label>
       <label><input type="radio" name="font" value="ming" data-k="font"> <b>新細明體</b> (英文 Arial)</label>
       <label><input type="radio" name="font" value="song" data-k="font"> <b>宋體</b> (英文 Arial)</label>
       <label><input type="radio" name="font" value="cming" data-k="font"> <b>粗明體</b> (英文 Arial，適合陰刻私章)</label>
     </div>
+    <div class="hint">字型依你的裝置而定：Windows 電腦最完整；手機或 Mac 可能自動換成相近的字型。</div>
     <div class="f">印泥顏色</div>
-    <div class="colors">
+    <div class="colors" role="radiogroup" aria-label="印泥顏色">
       <label style="color:#1d3fc4"><input type="radio" name="color" value="blue" data-k="color"> 藍色</label>
       <label style="color:#d42424"><input type="radio" name="color" value="red" data-k="color"> 紅色</label>
       <label style="color:#222"><input type="radio" name="color" value="black" data-k="color"> 黑色</label>
     </div>
     <div class="sl" style="margin-top:12px"><div class="lb"><span>斑駁程度（仿真印泥：濃淡不均、缺墨、邊緣粗糙）</span><b data-v="wear" data-u="%"></b></div><input type="range" data-k="wear" min="0" max="100" step="1" aria-label="斑駁程度"></div>
-    <div class="hint" style="font-size:12px;color:#6b7280;margin:-4px 0 4px">0＝全新乾淨；約 35＝輕微斑駁（預設）；70 以上＝老舊印章</div>
+    <div class="hint" style="margin-top:-4px">0＝全新乾淨；約 35＝輕微斑駁（預設）；70 以上＝老舊印章</div>
     <button class="btn main" id="dl" type="button">下載透明底 PNG</button>
     <button class="btn ghost" id="copy" type="button">複製圖片（可直接貼到 Word、LINE）</button>
     <div class="toast" id="msg" role="status" aria-live="polite"></div>
     <button class="btn ghost" id="reset" type="button">全部還原成預設值</button>
     <p class="note">僅供內部簽單、報價單、收發確認等用途。需要法律效力的公司大小章、個人銀行或登記用印鑑，仍須依規定刻印、登記。</p>
   </section>
+  </div>
 </main>
 
 <script>
 (function(){
+  /* ===== 程式結構（要新增功能，先看 DEV_GUIDE.md）=====
+     1 DEFAULTS    所有設定的預設值（新增設定從這裡開始）
+     2 介面產生    用 sl()/tx()/grp() 產生控制項，控制項的 data-k 對應 DEFAULTS 的名稱
+     3 狀態同步    sync()＝狀態→畫面；onInput()＝畫面→狀態；每次改動都會存到 localStorage
+     4 繪圖        paint() 依外框形狀呼叫 SHAPES 裡的畫法；texture() 是最後一道「斑駁」加工
+     5 輸出        下載、複製都先 render() 再 toBlob，所以所見即所得 */
   const KEY='sealgen.v2';
   const DEFAULTS={
     sealType:'收發章', shape:'tv',
@@ -139,7 +160,15 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
   };
   const COLORS={blue:'#1d3fc4',red:'#d42424',black:'#222222'};
   let s=Object.assign({},DEFAULTS);
-  try{const raw=localStorage.getItem(KEY);if(raw)Object.assign(s,JSON.parse(raw));}catch(e){}
+  // 只收「名稱與型別都符合」的舊設定；舊版殘留、被改壞的值一律忽略，新增的設定自動用預設值
+  try{
+    const raw=JSON.parse(localStorage.getItem(KEY)||'null');
+    if(raw&&typeof raw==='object'&&!Array.isArray(raw)){
+      for(const k in DEFAULTS){
+        if(typeof raw[k]===typeof DEFAULTS[k]&&(typeof raw[k]!=='number'||isFinite(raw[k])))s[k]=raw[k];
+      }
+    }
+  }catch(e){}
 
   /* ---------- 介面產生 ---------- */
   const sl=(k,l,min,max,u='')=>`<div class="sl"><div class="lb"><span>${l}</span><b data-v="${k}" data-u="${u}"></b></div><input type="range" data-k="${k}" min="${min}" max="${max}" step="1" aria-label="${l}"></div>`;
@@ -224,6 +253,16 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
 
   /* ---------- 狀態同步 ---------- */
   const $=(id)=>document.getElementById(id);
+  // 滑桿數值超出範圍、單選值不存在時修正（範圍以介面上的 min／max 為準，不必另外維護一份）
+  function clampState(){
+    document.querySelectorAll('input[type=range][data-k]').forEach(el=>{
+      const k=el.dataset.k;s[k]=Math.min(+el.max,Math.max(+el.min,s[k]));
+    });
+    const opts={};
+    document.querySelectorAll('input[type=radio][data-k]').forEach(el=>{(opts[el.dataset.k]=opts[el.dataset.k]||[]).push(el.value);});
+    for(const k in opts)if(!opts[k].includes(String(s[k])))s[k]=DEFAULTS[k];
+  }
+  clampState();
   function save(){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
   function sync(){
     document.querySelectorAll('[data-k]').forEach(el=>{
@@ -244,6 +283,7 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
     $('sideTexts').hidden=s.sideMode!=='text';
   }
   function onInput(e){
+    if(e.isComposing)return; // 注音／拼音組字中先不重畫，選字完成（compositionend）再畫
     const el=e.target,k=el.dataset&&el.dataset.k;
     if(!k)return;
     let v;
@@ -256,6 +296,7 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
   }
   document.addEventListener('input',onInput);
   document.addEventListener('change',onInput);
+  document.addEventListener('compositionend',onInput);
   document.addEventListener('click',e=>{
     const p=e.target.closest('[data-preset]');
     if(p){s.sealType=s.aText=p.dataset.preset;sync();save();draw();return;}
@@ -264,7 +305,10 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
     const f=e.target.closest('.fold');
     if(f)f.closest('.grp').classList.toggle('closed');
   });
-  $('reset').onclick=()=>{s=Object.assign({},DEFAULTS);sync();save();draw();};
+  $('reset').onclick=()=>{
+    if(!confirm('要把所有欄位還原成預設值嗎？目前填的內容會不見。'))return;
+    s=Object.assign({},DEFAULTS);sync();save();draw();say('已還原成預設值');
+  };
   let msgTimer=0;
   function say(text,err){
     const m=$('msg');m.textContent=text;m.classList.toggle('err',!!err);
@@ -423,6 +467,9 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
     ctx.restore();
   }
 
+  // 外框形狀登記表：新增形狀＝寫一個 drawXxx(ctx,col)，加進這裡，再在介面加一個形狀按鈕
+  const SHAPES={tv:drawCompany,oval:drawCompany,square:drawSquare};
+
   function paint(){
     const ctx=cv.getContext('2d');
     const K=cv.width/SIZE;
@@ -432,8 +479,11 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
     ctx.fillStyle=col;ctx.strokeStyle=col;
     ctx.lineJoin='round';ctx.lineCap='round';
     ctx.textAlign='center';ctx.textBaseline='middle';
-    if(s.shape==='square'){drawSquare(ctx,col);return;}
+    (SHAPES[s.shape]||drawCompany)(ctx,col);
+  }
 
+  // 公司章（電視型、橢圓形共用）
+  function drawCompany(ctx,col){
     const oval=s.shape==='oval';
     const hw=oval?192:188,hh=oval?150:168,gap=12;
     const ks=oval?0.88:1; // 橢圓較扁，中央文字區整體縮小一點才放得下
@@ -549,8 +599,8 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
     return out;
   }
   // 方形模糊（可分離、跑和），只用來找出「邊緣」在哪
-  function blurA(src,w,h,r){
-    const tmp=new Float32Array(w*h),out=new Float32Array(w*h),n=2*r+1;
+  function blurA(src,tmp,out,w,h,r){
+    const n=2*r+1;
     for(let y=0;y<h;y++){
       let acc=0;const o=y*w;
       for(let x=-r;x<=r;x++)acc+=src[o+Math.min(w-1,Math.max(0,x))];
@@ -567,7 +617,6 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
         acc+=tmp[Math.min(h-1,y+r+1)*w+x]-tmp[Math.max(0,y-r)*w+x];
       }
     }
-    return out;
   }
   const sstep=(a,b,x)=>{const t=Math.min(1,Math.max(0,(x-a)/(b-a)));return t*t*(3-2*t);};
 
@@ -579,13 +628,14 @@ input[type=range]{width:100%;accent-color:var(--brand);margin:0}
       NZ={w,h,
         blot:fbm(w,h,[[200,1],[90,.7],[38,.45]],1),   // 濃淡不均
         pit:fbm(w,h,[[14,1],[6,.8],[3,.6]],2),         // 缺墨斑點
-        edge:fbm(w,h,[[7,1],[3.5,.7]],3)              // 邊緣粗糙
+        edge:fbm(w,h,[[7,1],[3.5,.7]],3),             // 邊緣粗糙
+        a0:new Float32Array(w*h),ab:new Float32Array(w*h),tmp:new Float32Array(w*h) // 重複使用的暫存
       };
     }
     const img=ctx.getImageData(0,0,w,h),d=img.data,N=w*h;
-    const a0=new Float32Array(N);
+    const a0=NZ.a0,ab=NZ.ab,tmp=NZ.tmp;
     for(let i=0;i<N;i++)a0[i]=d[i*4+3]/255;
-    const ab=blurA(blurA(a0,w,h,2),w,h,2);           // 約 3 個像素寬的柔邊
+    blurA(a0,tmp,ab,w,h,2);blurA(ab,tmp,ab,w,h,2);   // 約 3 個像素寬的柔邊
     const blot=NZ.blot,pit=NZ.pit,edg=NZ.edge;
     for(let i=0;i<N;i++){
       const o=a0[i],b=ab[i];
