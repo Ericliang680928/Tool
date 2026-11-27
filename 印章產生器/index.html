@@ -1,0 +1,547 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>公司內部印章產生器</title>
+<style>
+:root{--bg:#eef2f8;--card:#fff;--ink:#1f2937;--mute:#6b7280;--line:#e5e7eb;--brand:#2563eb;--nav:#0b1f3a;--soft:#f3f6fb}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font-family:"Microsoft JhengHei","PingFang TC",system-ui,sans-serif;font-size:14px}
+header{background:var(--nav);color:#fff;padding:12px 24px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+header h1{font-size:18px;margin:0;font-weight:700}
+header small{opacity:.7}
+.grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:16px;padding:20px 24px;align-items:start}
+@media(max-width:1100px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:640px){.grid{grid-template-columns:1fr;padding:16px}.prev{order:-1}}
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;box-shadow:0 1px 3px rgba(15,23,42,.05)}
+.prev{position:sticky;top:16px}
+@media(max-width:1100px){.prev{position:static}}
+.card h2{font-size:16px;margin:0 0 14px;color:#1e3a8a}
+.f{font-size:12px;color:var(--mute);margin:10px 0 4px}
+input[type=text],textarea{width:100%;border:1px solid #cfd6e4;border-radius:8px;padding:8px 10px;font:inherit;background:#fff}
+input[type=text]:focus,textarea:focus{outline:2px solid #bfd3ff;border-color:var(--brand)}
+textarea{resize:vertical}
+[hidden]{display:none!important}
+hr{border:0;border-top:1px solid var(--line);margin:14px 0}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}
+.chips button{border:1px solid #bfd3ff;background:#eef4ff;color:#1d4ed8;border-radius:6px;padding:4px 10px;font:inherit;font-size:12px;cursor:pointer}
+.chips button:hover{background:#dce8ff}
+.shapes{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px}
+.shape input{position:absolute;opacity:0}
+.shape{position:relative;display:block}
+.shape .sb{display:flex;flex-direction:column;align-items:center;gap:6px;border:2px solid var(--line);border-radius:10px;padding:12px 6px;font-size:12px;cursor:pointer;background:#fff}
+.shape input:checked+.sb{border-color:var(--brand);background:#eef4ff;color:#1d4ed8}
+.shape input:focus-visible+.sb{outline:2px solid #93b4ff}
+.box{background:var(--soft);border-radius:8px;padding:10px 12px;margin-top:8px}
+.sl{margin:6px 0 10px}
+.sl:last-child{margin-bottom:0}
+.sl .lb{display:flex;justify-content:space-between;font-size:12px;color:#4b5563;margin-bottom:2px}
+.sl .lb b{color:var(--brand);font-weight:600}
+input[type=range]{width:100%;accent-color:var(--brand);margin:0}
+.grp{border-top:1px solid var(--line);padding-top:12px;margin-top:12px}
+.grp:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.ghead{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.ck{display:flex;align-items:center;gap:6px;font-weight:600;cursor:pointer}
+.ck input{width:16px;height:16px;accent-color:var(--brand)}
+.fold{border:0;background:none;color:var(--mute);font-size:16px;cursor:pointer;transition:transform .15s}
+.grp.closed .fold{transform:rotate(-90deg)}
+.grp.closed .gbody{display:none}
+.grp.off .gbody{opacity:.45;pointer-events:none}
+.inl{display:flex;gap:14px;align-items:center;margin:4px 0 8px;font-size:13px}
+.inl label{display:flex;align-items:center;gap:4px;cursor:pointer}
+.checker{background:conic-gradient(#e5e7eb 25%,#fff 0 50%,#e5e7eb 0 75%,#fff 0) 0 0/16px 16px;border-radius:10px;border:1px solid var(--line);padding:6px}
+#cv{display:block;width:100%;aspect-ratio:1/1;height:auto}
+.opt{display:flex;flex-direction:column;gap:8px;margin:6px 0 4px}
+.opt label{display:flex;align-items:center;gap:8px;cursor:pointer}
+.colors{display:flex;gap:14px;flex-wrap:wrap}
+.colors label{display:flex;align-items:center;gap:4px;cursor:pointer;font-weight:700}
+.btn{width:100%;border:0;border-radius:10px;padding:12px;font:inherit;font-weight:700;font-size:15px;cursor:pointer;margin-top:12px}
+.btn.main{background:var(--brand);color:#fff}
+.btn.main:hover{background:#1d4ed8}
+.btn.ghost{background:#fff;border:1px solid #cfd6e4;color:#374151;font-weight:600;font-size:13px;padding:8px;margin-top:8px}
+.grid.sqmode{grid-template-columns:repeat(2,minmax(0,1fr));max-width:900px;margin:0 auto}
+@media(max-width:640px){.grid.sqmode{grid-template-columns:1fr}}
+.sqmode .co-only{display:none!important}
+.ovalmode .tv-only{display:none!important}
+.grid:not(.sqmode) .sq-only{display:none!important}
+.seg{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:4px 0 8px}
+.seg label{position:relative;display:block}
+.seg input{position:absolute;opacity:0}
+.seg span{display:block;text-align:center;border:1px solid #cfd6e4;border-radius:8px;padding:7px 4px;font-size:12px;cursor:pointer;background:#fff}
+.seg input:checked+span{border-color:var(--brand);background:#eef4ff;color:#1d4ed8;font-weight:700}
+.seg input:focus-visible+span{outline:2px solid #93b4ff}
+.toast{min-height:20px;font-size:13px;color:#047857;margin-top:8px;text-align:center}
+.toast.err{color:#b91c1c}
+.note{font-size:11px;color:var(--mute);margin:10px 0 0;line-height:1.5}
+</style>
+</head>
+<body>
+<header>
+  <h1>公司內部印章產生器</h1>
+  <small>調整左邊的欄位，右邊即時預覽，最後按「下載透明底 PNG」</small>
+</header>
+
+<main class="grid" id="grid">
+  <section class="card" id="col1"></section>
+  <section class="card co-only" id="col2"></section>
+  <section class="card co-only" id="col3"></section>
+  <section class="card prev">
+    <h2>即時預覽</h2>
+    <div class="checker"><canvas id="cv" width="1200" height="1200"></canvas></div>
+    <div class="f" style="margin-top:14px">印章字型</div>
+    <div class="opt">
+      <label><input type="radio" name="font" value="kai" data-k="font"> <b>標楷體</b> (英文 Arial)</label>
+      <label><input type="radio" name="font" value="hei" data-k="font"> <b>正黑體</b> (英文 Arial)</label>
+      <label><input type="radio" name="font" value="ming" data-k="font"> <b>新細明體</b> (英文 Arial)</label>
+      <label><input type="radio" name="font" value="song" data-k="font"> <b>宋體</b> (英文 Arial)</label>
+      <label><input type="radio" name="font" value="cming" data-k="font"> <b>粗明體</b> (英文 Arial，適合陰刻私章)</label>
+    </div>
+    <div class="f">印泥顏色</div>
+    <div class="colors">
+      <label style="color:#1d3fc4"><input type="radio" name="color" value="blue" data-k="color"> 藍色</label>
+      <label style="color:#d42424"><input type="radio" name="color" value="red" data-k="color"> 紅色</label>
+      <label style="color:#222"><input type="radio" name="color" value="black" data-k="color"> 黑色</label>
+    </div>
+    <label class="ck" style="font-weight:400;margin-top:12px"><input type="checkbox" data-k="texture"><span>仿真印泥質感（邊緣略糊、少量缺墨）</span></label>
+    <button class="btn main" id="dl" type="button">下載透明底 PNG</button>
+    <button class="btn ghost" id="copy" type="button">複製圖片（可直接貼到 Word、LINE）</button>
+    <div class="toast" id="msg" role="status" aria-live="polite"></div>
+    <button class="btn ghost" id="reset" type="button">全部還原成預設值</button>
+    <p class="note">僅供內部簽單、報價單、收發確認等用途。需要法律效力的公司大小章、個人銀行或登記用印鑑，仍須依規定刻印、登記。</p>
+  </section>
+</main>
+
+<script>
+(function(){
+  const KEY='sealgen.v2';
+  const DEFAULTS={
+    sealType:'收發章', shape:'tv',
+    showDiv:false, divTop:4, divBottom:1, innerFrame:false, frameW:5,
+    arcOn:true, arcText:'範例股份有限公司', arcSize:30, arcSpace:2, arcY:0,
+    mainOn:true, mainText:'12345678', mainMulti:false, mainSize:55, mainSpace:0, mainY:0,
+    sideOn:true, sideMode:'text', sideL:'台北市', sideR:'信義區', sideX:13, sideSize:28,
+    aOn:true, aText:'收發章', aSize:37, aSpace:20, aY:0,
+    bOn:true, bText:'統一編號', bSize:21, bSpace:2, bY:0,
+    cOn:true, cText:'負責人：王大明', cSize:30, cSpace:0, cY:0,
+    dOn:true, dText:'TEL: 02-12345678', dSize:20, dSpace:0, dY:0,
+    botOn:true, botText:'仁愛路一段123號', botSize:28, botSpace:2, botY:0,
+    sqName:'王大明', sqLayout:'cols', sqCarve:'yang', sqScale:100, sqGap:0, sqColGap:0, sqFrameW:12, sqRadius:8, sqInner:false,
+    font:'kai', color:'blue', texture:false
+  };
+  const FONTS={
+    kai:'Arial,"DFKai-SB","標楷體","BiauKai","Kaiti TC","KaiTi",serif',
+    hei:'Arial,"Microsoft JhengHei","微軟正黑體","PingFang TC","Noto Sans TC",sans-serif',
+    ming:'Arial,"PMingLiU","新細明體","MingLiU","Songti TC",serif',
+    song:'Arial,"SimSun","宋体","Songti SC","Noto Serif TC",serif',
+    cming:'Arial,"Noto Serif TC Black","Noto Serif HK Black","Noto Serif TC","PMingLiU",serif'
+  };
+  const COLORS={blue:'#1d3fc4',red:'#d42424',black:'#222222'};
+  let s=Object.assign({},DEFAULTS);
+  try{const raw=localStorage.getItem(KEY);if(raw)Object.assign(s,JSON.parse(raw));}catch(e){}
+
+  /* ---------- 介面產生 ---------- */
+  const sl=(k,l,min,max,u='')=>`<div class="sl"><div class="lb"><span>${l}</span><b data-v="${k}" data-u="${u}"></b></div><input type="range" data-k="${k}" min="${min}" max="${max}" step="1" aria-label="${l}"></div>`;
+  const tx=(k,ph='')=>`<input type="text" data-k="${k}" placeholder="${ph}" aria-label="${ph||k}">`;
+  const grp=(k,l,body)=>`<div class="grp"><div class="ghead"><label class="ck"><input type="checkbox" data-k="${k}"><span>${l}</span></label><button type="button" class="fold" aria-label="展開或收合">▾</button></div><div class="gbody">${body}</div></div>`;
+  const trio=(p)=>`<div class="box">${sl(p+'Size','字體大小',10,90,'px')}${sl(p+'Space','文字間距',0,40,'px')}${sl(p+'Y','上下位置',-60,60)}</div>`;
+
+  document.getElementById('col1').innerHTML=`
+    <h2 class="co-only">外框與弧形文字</h2>
+    <h2 class="sq-only">個人私章設定</h2>
+    <div class="co-only">
+      <div class="f">章種</div>
+      ${tx('sealType','例如：收發章')}
+      <div class="chips">${['發票專用章','收發章','報價專用章','財務專用章','作廢'].map(t=>`<button type="button" data-preset="${t}">${t}</button>`).join('')}</div>
+      <hr>
+    </div>
+    <div class="f">外框形狀</div>
+    <div class="shapes">
+      <label class="shape"><input type="radio" name="shape" value="tv" data-k="shape"><span class="sb"><svg width="44" height="34" viewBox="0 0 44 34"><path d="M3 11Q22 -1 41 11L41 23Q22 35 3 23Z" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/></svg>電視型</span></label>
+      <label class="shape"><input type="radio" name="shape" value="oval" data-k="shape"><span class="sb"><svg width="44" height="34" viewBox="0 0 44 34"><ellipse cx="22" cy="17" rx="19" ry="12" fill="none" stroke="currentColor" stroke-width="2"/></svg>橢圓形</span></label>
+      <label class="shape"><input type="radio" name="shape" value="square" data-k="shape"><span class="sb"><svg width="44" height="34" viewBox="0 0 44 34"><rect x="9" y="2" width="26" height="30" rx="3" fill="none" stroke="currentColor" stroke-width="2.5"/></svg>正方型</span></label>
+    </div>
+
+    <div class="sq-only">
+      <div class="f">姓名（1～6 個字）</div>
+      ${tx('sqName','例如：王大明')}
+      <div class="chips">${['王明','王大明','歐陽小明','陳小美'].map(t=>`<button type="button" data-name="${t}">${t}</button>`).join('')}</div>
+      <div class="f">字的排法</div>
+      <div class="seg">
+        <label><input type="radio" name="sqLayout" value="cols" data-k="sqLayout"><span>兩欄・由右至左直讀</span></label>
+        <label><input type="radio" name="sqLayout" value="col" data-k="sqLayout"><span>單欄・上到下</span></label>
+        <label><input type="radio" name="sqLayout" value="rowRL" data-k="sqLayout"><span>橫排・由右至左</span></label>
+        <label><input type="radio" name="sqLayout" value="rowLR" data-k="sqLayout"><span>橫排・由左至右</span></label>
+      </div>
+      <div class="f">刻法</div>
+      <div class="seg">
+        <label><input type="radio" name="sqCarve" value="yang" data-k="sqCarve"><span>陽刻（紅框紅字）</span></label>
+        <label><input type="radio" name="sqCarve" value="yin" data-k="sqCarve"><span>陰刻（整塊上色、字留白）</span></label>
+      </div>
+      <div class="box">
+        ${sl('sqScale','字的大小',60,100,'%')}
+        ${sl('sqGap','上下字距',-20,40,'px')}
+        ${sl('sqColGap','左右欄距',-20,40,'px')}
+        ${sl('sqFrameW','邊框粗細',4,28,'px')}
+        ${sl('sqRadius','邊角圓度',0,60,'px')}
+        <label class="ck" style="font-weight:400;font-size:13px"><input type="checkbox" data-k="sqInner"><span>加內框細線</span></label>
+      </div>
+    </div>
+
+    <div class="co-only">
+      <div class="box" style="margin:12px 0">${sl('frameW','外框粗細',2,14,'px')}
+        <label class="ck" style="font-weight:400;font-size:13px"><input type="checkbox" data-k="innerFrame"><span>加內框細線</span></label></div>
+      <div class="grp tv-only">
+        <div class="ghead"><label class="ck"><input type="checkbox" data-k="showDiv"><span>顯示上下分割線（選用）</span></label><button type="button" class="fold" aria-label="展開或收合">▾</button></div>
+        <div class="gbody"><div class="box">${sl('divTop','上分割線',-20,20)}${sl('divBottom','下分割線',-20,20)}</div></div>
+      </div>
+      ${grp('arcOn','上弧文字（公司名稱）',tx('arcText','公司名稱')+trio('arc'))}
+      ${grp('botOn','下弧文字（地址）',tx('botText','地址')+trio('bot'))}
+    </div>
+  `;
+
+  document.getElementById('col2').innerHTML=`
+    <h2>主體大字與裝飾</h2>
+    ${grp('mainOn','主體大字',`
+      <input type="text" id="mainSingle" data-k="mainText" placeholder="例如：統編、編號">
+      <textarea id="mainMultiBox" rows="3" data-k="mainText" hidden placeholder="每一行按 Enter 換行"></textarea>
+      <label class="ck" style="font-weight:400;font-size:13px;margin-top:8px"><input type="checkbox" data-k="mainMulti"><span>多行模式（多行時字自動縮小）</span></label>
+      ${trio('main')}`)}
+    ${grp('sideOn','左右裝飾',`
+      <div class="inl"><label><input type="radio" name="sideMode" value="icon" data-k="sideMode">圖案（星星）</label><label><input type="radio" name="sideMode" value="text" data-k="sideMode">文字</label></div>
+      <div id="sideTexts"><div class="f">左側文字</div>${tx('sideL')}<div class="f">右側文字</div>${tx('sideR')}</div>
+      <div class="box">${sl('sideX','左右位置',0,30)}${sl('sideSize','字體大小',10,60,'px')}</div>`)}
+  `;
+
+  document.getElementById('col3').innerHTML=`
+    <h2>文字行</h2>
+    ${grp('aOn','文字行 A（章種名稱）',tx('aText')+trio('a'))}
+    ${grp('bOn','文字行 B（副標題）',tx('bText')+trio('b'))}
+    ${grp('cOn','文字行 C（選填）',tx('cText')+trio('c'))}
+    ${grp('dOn','文字行 D（電話）',tx('dText')+trio('d'))}
+  `;
+
+  /* ---------- 狀態同步 ---------- */
+  const $=(id)=>document.getElementById(id);
+  function save(){try{localStorage.setItem(KEY,JSON.stringify(s));}catch(e){}}
+  function sync(){
+    document.querySelectorAll('[data-k]').forEach(el=>{
+      const v=s[el.dataset.k];
+      if(el.type==='checkbox')el.checked=!!v;
+      else if(el.type==='radio')el.checked=(el.value===String(v));
+      else if(el.value!==String(v))el.value=v;
+    });
+    document.querySelectorAll('[data-v]').forEach(b=>{b.textContent=s[b.dataset.v]+(b.dataset.u||'');});
+    document.querySelectorAll('.grp').forEach(g=>{
+      const c=g.querySelector('.ghead input');
+      g.classList.toggle('off',!c.checked);
+    });
+    $('grid').classList.toggle('sqmode',s.shape==='square');
+    $('grid').classList.toggle('ovalmode',s.shape==='oval');
+    $('mainSingle').hidden=s.mainMulti;
+    $('mainMultiBox').hidden=!s.mainMulti;
+    $('sideTexts').hidden=s.sideMode!=='text';
+  }
+  function onInput(e){
+    const el=e.target,k=el.dataset&&el.dataset.k;
+    if(!k)return;
+    let v;
+    if(el.type==='checkbox')v=el.checked;
+    else if(el.type==='range')v=+el.value;
+    else v=el.value;
+    s[k]=v;
+    if(k==='sealType'){s.aText=v;}
+    sync();save();draw();
+  }
+  document.addEventListener('input',onInput);
+  document.addEventListener('change',onInput);
+  document.addEventListener('click',e=>{
+    const p=e.target.closest('[data-preset]');
+    if(p){s.sealType=s.aText=p.dataset.preset;sync();save();draw();return;}
+    const nm=e.target.closest('[data-name]');
+    if(nm){s.sqName=nm.dataset.name;sync();save();draw();return;}
+    const f=e.target.closest('.fold');
+    if(f)f.closest('.grp').classList.toggle('closed');
+  });
+  $('reset').onclick=()=>{s=Object.assign({},DEFAULTS);sync();save();draw();};
+  let msgTimer=0;
+  function say(text,err){
+    const m=$('msg');m.textContent=text;m.classList.toggle('err',!!err);
+    clearTimeout(msgTimer);msgTimer=setTimeout(()=>{m.textContent='';},4000);
+  }
+  const fileName=()=>((s.shape==='square'?(s.sqName||'姓名')+'_私章':(s.sealType||'印章')).replace(/[\\/:*?"<>|\s]+/g,'_'))+'.png';
+  $('dl').onclick=()=>{
+    render();
+    cv.toBlob(b=>{
+      if(!b){say('產生圖片失敗，請再按一次',true);return;}
+      const a=document.createElement('a');
+      a.href=URL.createObjectURL(b);
+      a.download=fileName();
+      document.body.appendChild(a);a.click();a.remove();
+      setTimeout(()=>URL.revokeObjectURL(a.href),1500);
+      say('已下載：'+a.download+'（請到瀏覽器的「下載」資料夾找）');
+    },'image/png');
+  };
+  $('copy').onclick=()=>{
+    render();
+    cv.toBlob(async b=>{
+      try{
+        await navigator.clipboard.write([new ClipboardItem({'image/png':b})]);
+        say('已複製，到 Word 或 LINE 直接按 Ctrl+V 貼上');
+      }catch(e){say('這個瀏覽器不允許複製，請改按「下載透明底 PNG」',true);}
+    },'image/png');
+  };
+
+  /* ---------- 繪圖 ---------- */
+  const cv=$('cv');
+  const SIZE=400,CX=200,CY=200;
+
+  function shapePath(ctx,hw,hh){
+    ctx.beginPath();
+    if(s.shape==='oval'){ctx.ellipse(CX,CY,hw,hh,0,0,Math.PI*2);return;}
+    // 電視型：左右筆直，上下兩邊為微微隆起的拱形（依原版輪廓量測）
+    const sag=hw*0.197,e=hh-sag;
+    ctx.moveTo(CX-hw,CY-e);
+    ctx.quadraticCurveTo(CX,CY-hh-sag,CX+hw,CY-e);
+    ctx.lineTo(CX+hw,CY+e);
+    ctx.quadraticCurveTo(CX,CY+hh+sag,CX-hw,CY+e);
+    ctx.closePath();
+  }
+
+  function fontOf(size){return `bold ${size}px ${FONTS[s.font]||FONTS.kai}`;}
+
+  // 水平置中文字，逐字排版，太寬時自動橫向壓縮
+  function line(ctx,text,y,size,spacing,maxW){
+    const ch=[...text];if(!ch.length)return;
+    ctx.font=fontOf(size);
+    const w=ch.map(c=>ctx.measureText(c).width);
+    const total=w.reduce((a,b)=>a+b,0)+spacing*(ch.length-1);
+    const k=total>maxW?maxW/total:1;
+    ctx.save();ctx.translate(CX,CY+y);ctx.scale(k,1);
+    let x=-total/2;
+    ch.forEach((c,i)=>{ctx.fillText(c,x+w[i]/2,0);x+=w[i]+spacing;});
+    ctx.restore();
+  }
+
+  // 沿橢圓排字：top=true 為上弧（由左到右），false 為下弧（字保持正立）
+  function arcText(ctx,text,rx,ry,size,spacing,top,xlim,shrunk){
+    const ch=[...text];if(!ch.length)return;
+    ctx.font=fontOf(size);
+    const w=ch.map(c=>ctx.measureText(c).width);
+    const total=w.reduce((a,b)=>a+b,0)+spacing*(ch.length-1);
+    const dir=top?1:-1;
+    const speed=t=>Math.hypot(rx*Math.sin(t),ry*Math.cos(t));
+    const move=(t,d,dr)=>{
+      let rem=Math.abs(d);const sg=Math.sign(d)*dr;
+      while(rem>1e-6){const st=Math.min(rem,1);t+=sg*st/speed(t);rem-=st;}
+      return t;
+    };
+    const t0=top?-Math.PI/2:Math.PI/2;
+    // 字太多、超出可用範圍時，整體等比縮小（二分法找出剛好放得下的比例）
+    // 以「離頂端（或底端）轉過的角度」換算橫向位置，文字繞過橢圓側邊時仍然單調遞增
+    const xEndOf=L=>rx*Math.sin(Math.min(Math.abs(move(t0,L/2,dir)-t0),Math.PI/2));
+    if(!shrunk&&xEndOf(total)>xlim){
+      let lo=0.2,hi=1;
+      for(let i=0;i<14;i++){const mid=(lo+hi)/2;if(xEndOf(total*mid)>xlim)hi=mid;else lo=mid;}
+      return arcText(ctx,text,rx,ry,size*lo,spacing*lo,top,xlim,true);
+    }
+    const tStart=move(t0,-total/2,dir);
+    let cum=0;
+    ch.forEach((c,i)=>{
+      const t=move(tStart,cum+w[i]/2,dir);
+      const ang=Math.atan2(dir*ry*Math.cos(t),-dir*rx*Math.sin(t));
+      ctx.save();
+      ctx.translate(CX+rx*Math.cos(t),CY+ry*Math.sin(t));
+      ctx.rotate(ang);
+      ctx.fillText(c,0,0);
+      ctx.restore();
+      cum+=w[i]+spacing;
+    });
+  }
+
+  function star(ctx,x,y,R){
+    ctx.beginPath();
+    for(let i=0;i<10;i++){
+      const a=-Math.PI/2+i*Math.PI/5,r=i%2?R*0.42:R;
+      ctx[i?'lineTo':'moveTo'](x+r*Math.cos(a),y+r*Math.sin(a));
+    }
+    ctx.closePath();ctx.fill();
+  }
+
+  // 圓角方框路徑（hw 為半邊長）
+  function boxPath(ctx,hw,rad){
+    const x=CX-hw,y=CY-hw,w=hw*2,r=Math.max(0,Math.min(rad,hw));
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+w,r);ctx.arcTo(x+w,y+w,x,y+w,r);
+    ctx.arcTo(x,y+w,x,y,r);ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  // 個人姓名私章：方框＋姓名排版，陽刻（字與框上色）或陰刻（整塊上色、字與內框鏤空）
+  function drawSquare(ctx,col){
+    const E=184,fw=s.sqFrameW,yin=s.sqCarve==='yin';
+    ctx.fillStyle=col;ctx.strokeStyle=col;
+    ctx.lineJoin='round';ctx.lineCap='round';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+
+    if(yin){boxPath(ctx,E,s.sqRadius);ctx.fill();}
+    else{ctx.lineWidth=fw;boxPath(ctx,E-fw/2,Math.max(0,s.sqRadius-fw/2));ctx.stroke();}
+
+    // 內框細線
+    if(s.sqInner){
+      ctx.save();
+      if(yin)ctx.globalCompositeOperation='destination-out';
+      ctx.lineWidth=3;
+      boxPath(ctx,E-fw-7,Math.max(0,s.sqRadius-fw-7));ctx.stroke();
+      ctx.restore();
+    }
+
+    const chars=[...(s.sqName||'').replace(/\s/g,'')];
+    if(!chars.length)return;
+    const half=E-fw-(s.sqInner?22:10),W=half*2;
+
+    // 先把字分成「欄」，每欄由上而下；cols[0] 為最右欄（橫排由左至右時為最左欄）
+    let cols;
+    if(s.sqLayout==='col')cols=[chars];
+    else if(s.sqLayout==='rowRL'||s.sqLayout==='rowLR')cols=chars.map(c=>[c]);
+    else if(chars.length===1)cols=[chars];
+    else{const per=Math.ceil(chars.length/2);cols=[chars.slice(0,per),chars.slice(per)];}
+
+    const nc=cols.length,rows=Math.max(...cols.map(c=>c.length));
+    const cw=(W-(nc-1)*s.sqColGap)/nc,ch=(W-(rows-1)*s.sqGap)/rows;
+    const size=Math.min(cw,ch)*0.96*Math.min(100,s.sqScale)/100;
+    ctx.font=fontOf(size);
+    ctx.save();
+    if(yin){ctx.globalCompositeOperation='destination-out';ctx.fillStyle='#000';}
+    cols.forEach((c,i)=>{
+      const x=s.sqLayout==='rowLR'?CX-half+cw/2+i*(cw+s.sqColGap):CX+half-cw/2-i*(cw+s.sqColGap);
+      const total=c.length*ch+(c.length-1)*s.sqGap;
+      c.forEach((g,j)=>ctx.fillText(g,x,CY-total/2+ch/2+j*(ch+s.sqGap)));
+    });
+    ctx.restore();
+  }
+
+  function paint(){
+    const ctx=cv.getContext('2d');
+    const K=cv.width/SIZE;
+    ctx.setTransform(K,0,0,K,0,0);
+    ctx.clearRect(0,0,SIZE,SIZE);
+    const col=COLORS[s.color]||COLORS.blue;
+    ctx.fillStyle=col;ctx.strokeStyle=col;
+    ctx.lineJoin='round';ctx.lineCap='round';
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    if(s.shape==='square'){drawSquare(ctx,col);return;}
+
+    const oval=s.shape==='oval';
+    const hw=oval?192:188,hh=oval?150:168,gap=12;
+    const ks=oval?0.88:1; // 橢圓較扁，中央文字區整體縮小一點才放得下
+    const hwIn=hw-gap,hhIn=hh-gap;
+
+    // 外框
+    ctx.lineWidth=s.frameW;
+    shapePath(ctx,hw,hh);ctx.stroke();
+    if(s.innerFrame){
+      ctx.lineWidth=Math.max(1,s.frameW*0.4);
+      shapePath(ctx,hwIn,hhIn);ctx.stroke();
+    }
+
+    // 分割線（裁在內框之內）
+    if(s.showDiv&&!oval){
+      ctx.save();
+      shapePath(ctx,hwIn,hhIn);ctx.clip();
+      ctx.lineWidth=Math.max(1.5,s.frameW*0.45);
+      [-116+s.divTop*2,98+s.divBottom*2].forEach(y=>{
+        ctx.beginPath();ctx.moveTo(CX-hw,CY+y);ctx.lineTo(CX+hw,CY+y);ctx.stroke();
+      });
+      ctx.restore();
+    }
+
+    // 上下弧文字：電視型用較平的弧線；橢圓形沿著外框走，且兩端盡量不低於分割線
+    const sideHalf=(()=>{
+      if(!s.sideOn)return 0;
+      if(s.sideMode==='icon')return s.sideSize*0.62;
+      const n=Math.max(1,[...s.sideL].length,[...s.sideR].length);
+      return Math.min(s.sideSize,(oval?118:150)/(n*1.05))*n*1.05/2;
+    })();
+    // 橢圓形：弧形文字兩端不可低於左右裝飾字的上緣（設下限，字不致縮到看不見）
+    const ovalLim=(rx,ry,size)=>{
+      if(!sideHalf)return rx*0.95;
+      const c=Math.min(1,(sideHalf+size/2+4)/ry);
+      return Math.max(rx*0.55,Math.min(rx*0.95,rx*Math.sqrt(1-c*c)));
+    };
+    if(s.arcOn){
+      const rx=oval?hwIn-8-s.arcSize/2:257,ry=Math.max(30,hhIn-8-s.arcSize/2-s.arcY);
+      arcText(ctx,s.arcText,rx,ry,s.arcSize,s.arcSpace,true,oval?ovalLim(rx,ry,s.arcSize):hwIn-16);
+    }
+    if(s.botOn){
+      const rx=oval?hwIn-8-s.botSize/2:257,ry=Math.max(30,hhIn-8-s.botSize/2+s.botY);
+      arcText(ctx,s.botText,rx,ry,s.botSize,s.botSpace,false,oval?ovalLim(rx,ry,s.botSize):hwIn-16);
+    }
+
+    // 左右裝飾
+    const sx=hwIn*(0.60+0.018*s.sideX);
+    const maxW=(s.sideOn?Math.max(60,2*(sx-s.sideSize/2-6)):2*(hwIn-16))/ks;
+    if(s.sideOn){
+      ctx.font=fontOf(s.sideSize);
+      if(s.sideMode==='icon'){
+        star(ctx,CX-sx,CY,s.sideSize*0.62);
+        star(ctx,CX+sx,CY,s.sideSize*0.62);
+      }else{
+        [[s.sideL,-sx],[s.sideR,sx]].forEach(([t,x])=>{
+          const ch=[...t];
+          const sz=Math.min(s.sideSize,(oval?118:150)/(Math.max(1,ch.length)*1.05)); // 字太多時整排縮小，免得頂到弧形文字
+          ctx.font=fontOf(sz);
+          ch.forEach((c,i)=>ctx.fillText(c,CX+x,CY+(i-(ch.length-1)/2)*sz*1.05));
+        });
+      }
+    }
+
+    // 中央文字行
+    ctx.save();
+    ctx.translate(CX,CY);ctx.scale(ks,ks);ctx.translate(-CX,-CY);
+    if(s.aOn)line(ctx,s.aText,-82+s.aY,s.aSize,s.aSpace,maxW);
+    if(s.bOn)line(ctx,s.bText,-46+s.bY,s.bSize,s.bSpace,maxW);
+    if(s.mainOn){
+      const rows=s.mainMulti?s.mainText.split('\n'):[s.mainText.replace(/\n/g,' ')];
+      const ms=rows.length>1?s.mainSize*1.05/rows.length:s.mainSize; // 多行時整體高度維持不變
+      const lh=ms*1.1;
+      rows.forEach((t,i)=>line(ctx,t,-4+s.mainY+(i-(rows.length-1)/2)*lh,ms,s.mainSpace,maxW));
+    }
+    if(s.cOn)line(ctx,s.cText,44+s.cY,s.cSize,s.cSpace,maxW);
+    if(s.dOn)line(ctx,s.dText,80+s.dY,s.dSize,s.dSpace,maxW);
+    ctx.restore();
+  }
+
+  // 仿真印泥：邊緣略糊、少量缺墨（固定雜訊，重畫時不會閃爍）
+  function texture(){
+    const ctx=cv.getContext('2d'),w=cv.width,h=cv.height;
+    const img=ctx.getImageData(0,0,w,h),d=img.data;
+    for(let y=0;y<h;y++){
+      for(let x=0;x<w;x++){
+        const i=(y*w+x)*4+3;
+        if(!d[i])continue;
+        let n=(((x>>1)*73856093)^((y>>1)*19349663))>>>0;
+        n=Math.imul(n^(n>>>13),1274126177)>>>0;
+        const r=(n&1023)/1023;
+        d[i]=r<0.025?d[i]*0.22:d[i]*(0.84+0.16*r);
+      }
+    }
+    ctx.putImageData(img,0,0);
+  }
+
+  function render(){paint();if(s.texture)texture();}
+  // 同一個動作觸發多次重畫時只畫一次
+  let pending=false;
+  function draw(){
+    if(pending)return;
+    pending=true;
+    Promise.resolve().then(()=>{pending=false;render();});
+  }
+
+  sync();render();
+  if(document.fonts&&document.fonts.ready)document.fonts.ready.then(draw);
+})();
+</script>
+</body>
+</html>
